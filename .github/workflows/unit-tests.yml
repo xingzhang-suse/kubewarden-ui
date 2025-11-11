@@ -7,10 +7,38 @@ on:
   pull_request:
     branches:
       - main
+    paths:
+      - 'pkg/kubewarden/**'
+      - 'pkg/sbomscanner/**'
+  push:
+    branches:
+      - sbom-merge
 
 jobs:
+  detect-changes:
+    name: Detect changes and set up projects
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.filter.outputs.changes_detected }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed projects in monorepo
+        id: filter
+        uses: advanced-security/monorepo-code-scanning-action/changes@v1
+        with:
+          extra-globs: |
+            kubewarden:
+              - 'pkg/kubewarden/**'
+            sbomscanner:
+              - 'pkg/sbomscanner/**'
   unit-test:
-    if: github.repository_owner == 'rancher'
+    # if: github.repository_owner == 'rancher'
+    if: ${{ needs.detect-changes.outputs.kubewarden == 'true' }}
+    needs: detect-changes
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -37,9 +65,44 @@ jobs:
 
       - name: Run tests
         run: |
-          yarn test:ci
-          mkdir -p coverage-artifacts/coverage/unit
-          cp coverage/unit/coverage-final.json coverage-artifacts/coverage/coverage-unit.json
+          yarn test:ci:kubewarden
+          mkdir -p coverage-artifacts/coverage/kubewarden/unit
+          cp coverage/kubewarden/unit/coverage-final.json coverage-artifacts/coverage/kubewarden/coverage-unit.json
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ${{github.run_number}}-${{github.run_attempt}}-coverage
+          path: coverage-artifacts/**/*
+  unit-test-sbomscanner:
+    # if: github.repository_owner == 'rancher'
+    if: ${{ needs.detect-changes.outputs.sbomscanner == 'true' }}
+    needs: detect-changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Setup yarn
+        run: npm install -g yarn
+
+      - name: Setup Nodejs with yarn caching
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn
+
+      - name: Run tests and collect coverage
+        run: |
+          npm run test:ci:sbomscanner
+          mkdir -p coverage-artifacts/coverage/sbomscanner/unit
+          cp coverage/sbomscanner/unit/coverage-final.json coverage-artifacts/coverage/sbomscanner/coverage-unit.json
 
       - name: Upload coverage
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
