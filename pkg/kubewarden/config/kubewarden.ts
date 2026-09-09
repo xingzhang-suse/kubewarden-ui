@@ -1,8 +1,10 @@
 import { rootKubewardenRoute } from '@kubewarden/utils/custom-routing';
 import {
-  KUBEWARDEN, KUBEWARDEN_DASHBOARD, POLICY_REPORTER_PRODUCT, KUBEWARDEN_PRODUCT_NAME, OPEN_REPORTS
+  KUBEWARDEN, KUBEWARDEN_DASHBOARD, POLICY_REPORTER_PRODUCT, KUBEWARDEN_PRODUCT_NAME, OPEN_REPORTS, PROD_NAME
 } from '@kubewarden/types';
 import { POLICY_SERVER_HEADERS, POLICY_HEADERS, ADMISSION_POLICY_HEADERS } from './table-headers';
+
+const GROUP_NAME = 'Admission Control Management';
 
 export function init($extension: any, store: any) {
   const {
@@ -11,7 +13,7 @@ export function init($extension: any, store: any) {
     weightType,
     virtualType,
     headers
-  } = $extension.DSL(store, $extension.name);
+  } = $extension.DSL(store, PROD_NAME);
 
   const {
     POLICY_SERVER,
@@ -45,8 +47,8 @@ export function init($extension: any, store: any) {
     namespaced: false,
     weight:     95,
     route:      {
-      name:   `c-cluster-${ KUBEWARDEN_PRODUCT_NAME }-${ POLICY_REPORTER_PRODUCT }`,
-      params: { product: KUBEWARDEN_PRODUCT_NAME }
+      name:   `c-cluster-${ PROD_NAME }-${ KUBEWARDEN_PRODUCT_NAME }-${ POLICY_REPORTER_PRODUCT }`,
+      params: { product: PROD_NAME }
     }
   });
 
@@ -56,7 +58,7 @@ export function init($extension: any, store: any) {
     POLICY_SERVER,
     ADMISSION_POLICY,
     CLUSTER_ADMISSION_POLICY
-  ]);
+  ], GROUP_NAME);
 
   weightType(POLICY_SERVER, 98, true);
   weightType(CLUSTER_ADMISSION_POLICY, 97, true);

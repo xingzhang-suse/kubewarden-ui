@@ -17,6 +17,7 @@ import { Banner } from '@components/Banner';
 import AsyncButton from '@shell/components/AsyncButton';
 import Loading from '@shell/components/Loading';
 import Wizard from '@shell/components/Wizard';
+import { PROD_NAME } from '@kubewarden/types';
 
 import {
   DEFAULT_POLICY,
@@ -458,7 +459,7 @@ export default ({
         name:   'c-cluster-product-resource',
         params: {
           cluster:  this.$route.params.cluster,
-          product:  KUBEWARDEN_PRODUCT_NAME,
+          product:  PROD_NAME,
           resource: this.schema?.id
         }
       });

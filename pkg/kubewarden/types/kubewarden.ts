@@ -8,6 +8,7 @@ import {
   V1MatchCondition
 } from '@kubernetes/client-node';
 
+export const PROD_NAME = 'security';
 export const KUBEWARDEN_PRODUCT_NAME = 'kubewarden';
 export const KUBEWARDEN_PRODUCT_GROUP = 'policies.kubewarden.io';
 
